@@ -86,13 +86,21 @@ Structure is intuitive. LLMs understand it immediately. Developers understand it
 ### Installation
 
 ```bash
-# Clone or download the installer
+# Using bash
 curl -sSL https://raw.githubusercontent.com/yourusername/vibecontrol/main/install.sh | bash
 
-# Or manually:
-mkdir -p docs/{plans,knowledge,schema,proc}
-touch docs/progress.md
-curl -o docs/VIBECONTROL.md https://raw.githubusercontent.com/yourusername/vibecontrol/main/VIBECONTROL.md
+# Using npx (Node.js)
+npx vibecontrol --standard
+
+# Using uv (Python)
+uv run https://raw.githubusercontent.com/yourusername/vibecontrol/main/install.py --standard
+
+# Or clone and run locally
+git clone https://github.com/yourusername/vibecontrol.git
+cd vibecontrol
+./install.sh --standard
+# or: python install.py --standard
+# or: node install.js --standard
 ```
 
 The installer will:
