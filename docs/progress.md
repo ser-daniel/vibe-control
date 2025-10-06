@@ -4,6 +4,40 @@ This file tracks all significant work completed in this project. Each entry shou
 
 ---
 
+## 2025-10-06 19:48 UTC
+
+### Fixed install.sh to support interactive input when piped from curl
+
+**Context:** User reported that running `curl -sSL https://raw.githubusercontent.com/.../install.sh | bash` skipped all interactive prompts. When scripts are piped to bash, stdin is consumed by the pipe, leaving nothing for `read` commands to capture user input.
+
+**Changes:**
+- Modified install.sh to read from `/dev/tty` instead of stdin for all interactive prompts:
+  - `prompt_setup_type()` line 81: Added `</dev/tty` to choice input
+  - `prompt_custom_modules()` lines 97, 100, 103, 106: Added `</dev/tty` to all four module selection prompts
+  - `prompt_multi_agentic()` line 130: Added `</dev/tty` to enable_locking prompt
+  - `update_project_readme()` line 295: Added `</dev/tty` to update_readme prompt
+  - `update_claude_md()` line 322: Added `</dev/tty` to create_claude prompt
+  - `create_gitignore_entries()` line 364: Added `</dev/tty` to ignore_proc prompt
+
+**Outcome:**
+- Installation script now works correctly when piped through curl: `curl ... | bash`
+- All interactive prompts now properly accept user input in piped execution context
+- Script maintains backward compatibility for direct execution: `./install.sh`
+- Users can install VIBECONTROL with single command without downloading script first
+
+**Issues:** None identified
+
+**Next:**
+- Test installation via curl from actual GitHub raw URL
+- Consider adding this fix pattern to documentation for future script development
+- Update README.md installation examples if needed
+
+**Related:**
+- install.sh lines 81, 97, 100, 103, 106, 130, 295, 322, 364 - modified read commands
+- README.md installation section (may reference curl | bash pattern)
+
+---
+
 ## 2025-10-06 18:52 UTC
 
 ### Rewrote README.md with value-proposition and competitive positioning

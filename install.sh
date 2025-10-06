@@ -79,7 +79,7 @@ prompt_setup_type() {
     echo ""
 
     while true; do
-        read -p "Enter choice [1-4]: " choice
+        read -p "Enter choice [1-4]: " choice </dev/tty
         case $choice in
             1) SETUP_TYPE="minimal"; break;;
             2) SETUP_TYPE="standard"; break;;
@@ -95,16 +95,16 @@ prompt_custom_modules() {
     echo "Select modules to install (y/n for each):"
     echo ""
 
-    read -p "plans/ - Task breakdowns and roadmaps? [Y/n]: " install_plans
+    read -p "plans/ - Task breakdowns and roadmaps? [Y/n]: " install_plans </dev/tty
     install_plans=${install_plans:-Y}
 
-    read -p "knowledge/ - Stable reference material? [Y/n]: " install_knowledge
+    read -p "knowledge/ - Stable reference material? [Y/n]: " install_knowledge </dev/tty
     install_knowledge=${install_knowledge:-Y}
 
-    read -p "schema/ - Architecture diagrams (Mermaid)? [y/N]: " install_schema
+    read -p "schema/ - Architecture diagrams (Mermaid)? [y/N]: " install_schema </dev/tty
     install_schema=${install_schema:-N}
 
-    read -p "proc/ - Debug logs and context snapshots? [y/N]: " install_proc
+    read -p "proc/ - Debug logs and context snapshots? [y/N]: " install_proc </dev/tty
     install_proc=${install_proc:-N}
 }
 
@@ -128,7 +128,7 @@ prompt_multi_agentic() {
     echo "working simultaneously. Not needed for single-agent use."
     echo ""
 
-    read -p "Enable multi-agentic locking? [y/N]: " enable_locking
+    read -p "Enable multi-agentic locking? [y/N]: " enable_locking </dev/tty
     enable_locking=${enable_locking:-N}
 
     if [[ "${enable_locking}" =~ ^[Yy]$ ]]; then
@@ -293,7 +293,7 @@ update_project_readme() {
         return
     fi
 
-    read -p "Update README.md with VIBECONTROL reference? [Y/n]: " update_readme
+    read -p "Update README.md with VIBECONTROL reference? [Y/n]: " update_readme </dev/tty
     update_readme=${update_readme:-Y}
 
     if [[ "${update_readme}" =~ ^[Yy]$ ]]; then
@@ -320,7 +320,7 @@ EOF
 
 update_claude_md() {
     if [ ! -f "${TARGET_DIR}/CLAUDE.md" ]; then
-        read -p "Create CLAUDE.md with VIBECONTROL instructions? [Y/n]: " create_claude
+        read -p "Create CLAUDE.md with VIBECONTROL instructions? [Y/n]: " create_claude </dev/tty
         create_claude=${create_claude:-Y}
 
         if [[ "${create_claude}" =~ ^[Yy]$ ]]; then
@@ -362,7 +362,7 @@ EOF
 create_gitignore_entries() {
     local gitignore="${TARGET_DIR}/.gitignore"
 
-    read -p "Add docs/proc/ to .gitignore (debug logs)? [y/N]: " ignore_proc
+    read -p "Add docs/proc/ to .gitignore (debug logs)? [y/N]: " ignore_proc </dev/tty
     ignore_proc=${ignore_proc:-N}
 
     if [[ "${ignore_proc}" =~ ^[Yy]$ ]]; then
