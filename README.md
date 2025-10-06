@@ -195,18 +195,18 @@ This project uses VIBECONTROL for context management.
 
 ## What VIBECONTROL Is
 
-✅ A protocol for managing AI context
-✅ Markdown files in your git repository
-✅ Instructions for LLM assistants
-✅ Free and open source
+- ✅ A protocol for managing AI context
+- ✅ Markdown files in your git repository
+- ✅ Instructions for LLM assistants
+- ✅ Free and open source
 
 ## What VIBECONTROL Is Not
 
-❌ A framework with dependencies
-❌ A SaaS platform
-❌ Prescriptive or rigid
-❌ Coupled to specific tools
-❌ Complex or abstract
+- ❌ A framework with dependencies
+- ❌ A SaaS platform
+- ❌ Prescriptive or rigid
+- ❌ Coupled to specific tools
+- ❌ Complex or abstract
 
 ---
 

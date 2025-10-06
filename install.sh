@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 SETUP_TYPE=""
 TARGET_DIR="$(pwd)"
 DOCS_DIR="${TARGET_DIR}/docs"
+MULTI_AGENTIC=false
 
 # Script location (for copying VIBECONTROL.md)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -105,6 +106,35 @@ prompt_custom_modules() {
 
     read -p "proc/ - Debug logs and context snapshots? [y/N]: " install_proc
     install_proc=${install_proc:-N}
+}
+
+prompt_multi_agentic() {
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Multi-Agentic Concurrency Support"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "If multiple AI agents will work on this project concurrently,"
+    echo "VIBECONTROL can use a lock file to prevent race conditions"
+    echo "when updating docs/progress.md."
+    echo ""
+    echo "When enabled:"
+    echo "  • Creates docs/.progress.lock file"
+    echo "  • Agents acquire lock before updating progress.md"
+    echo "  • Other agents wait until lock is released"
+    echo "  • Includes helper scripts for lock management"
+    echo ""
+    echo "Only enable this if you plan to have multiple agents"
+    echo "working simultaneously. Not needed for single-agent use."
+    echo ""
+
+    read -p "Enable multi-agentic locking? [y/N]: " enable_locking
+    enable_locking=${enable_locking:-N}
+
+    if [[ "${enable_locking}" =~ ^[Yy]$ ]]; then
+        MULTI_AGENTIC=true
+        print_info "Multi-agentic support will be enabled"
+    fi
 }
 
 create_docs_structure() {
@@ -352,6 +382,183 @@ create_gitignore_entries() {
     fi
 }
 
+create_lock_infrastructure() {
+    print_info "Setting up multi-agentic locking infrastructure..."
+
+    # Create .progress.lock file
+    echo "0" > "${DOCS_DIR}/.progress.lock"
+    print_success "Created .progress.lock (initialized to 0)"
+
+    # Create lock helper scripts directory
+    mkdir -p "${DOCS_DIR}/.lock-scripts"
+
+    # Create lock acquisition script
+    cat > "${DOCS_DIR}/.lock-scripts/acquire-lock.sh" << 'LOCKEOF'
+#!/usr/bin/env bash
+# VIBECONTROL Multi-Agentic Lock Acquisition Script
+# Usage: bash docs/.lock-scripts/acquire-lock.sh [timeout_seconds]
+
+LOCK_FILE="$(dirname "$0")/../.progress.lock"
+TIMEOUT=${1:-30}
+WAIT_INTERVAL=1
+ELAPSED=0
+
+echo "Attempting to acquire progress.md lock..."
+
+while [ $ELAPSED -lt $TIMEOUT ]; do
+    # Try to acquire lock
+    LOCK_VALUE=$(cat "$LOCK_FILE" 2>/dev/null || echo "1")
+
+    if [ "$LOCK_VALUE" = "0" ]; then
+        # Lock is free, acquire it
+        echo "1" > "$LOCK_FILE"
+
+        # Verify we got it (handle race condition)
+        sleep 0.1
+        VERIFY=$(cat "$LOCK_FILE")
+        if [ "$VERIFY" = "1" ]; then
+            echo "✓ Lock acquired successfully"
+            exit 0
+        fi
+    fi
+
+    # Lock is busy, wait and retry
+    sleep $WAIT_INTERVAL
+    ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+
+    if [ $((ELAPSED % 5)) -eq 0 ]; then
+        echo "Still waiting for lock... (${ELAPSED}s elapsed)"
+    fi
+done
+
+echo "✗ Failed to acquire lock after ${TIMEOUT}s timeout"
+exit 1
+LOCKEOF
+
+    # Create lock release script
+    cat > "${DOCS_DIR}/.lock-scripts/release-lock.sh" << 'LOCKEOF'
+#!/usr/bin/env bash
+# VIBECONTROL Multi-Agentic Lock Release Script
+# Usage: bash docs/.lock-scripts/release-lock.sh
+
+LOCK_FILE="$(dirname "$0")/../.progress.lock"
+
+echo "0" > "$LOCK_FILE"
+echo "✓ Lock released"
+exit 0
+LOCKEOF
+
+    # Create lock status check script
+    cat > "${DOCS_DIR}/.lock-scripts/check-lock.sh" << 'LOCKEOF'
+#!/usr/bin/env bash
+# VIBECONTROL Multi-Agentic Lock Status Check
+# Usage: bash docs/.lock-scripts/check-lock.sh
+
+LOCK_FILE="$(dirname "$0")/../.progress.lock"
+
+LOCK_VALUE=$(cat "$LOCK_FILE" 2>/dev/null || echo "ERROR")
+
+if [ "$LOCK_VALUE" = "ERROR" ]; then
+    echo "✗ Lock file not found or unreadable"
+    exit 2
+elif [ "$LOCK_VALUE" = "0" ]; then
+    echo "✓ Lock is FREE"
+    exit 0
+elif [ "$LOCK_VALUE" = "1" ]; then
+    echo "⚠ Lock is BUSY"
+    exit 1
+else
+    echo "✗ Invalid lock value: $LOCK_VALUE"
+    exit 2
+fi
+LOCKEOF
+
+    # Make scripts executable
+    chmod +x "${DOCS_DIR}/.lock-scripts/acquire-lock.sh"
+    chmod +x "${DOCS_DIR}/.lock-scripts/release-lock.sh"
+    chmod +x "${DOCS_DIR}/.lock-scripts/check-lock.sh"
+
+    print_success "Created lock helper scripts in docs/.lock-scripts/"
+
+    # Create usage instructions
+    cat > "${DOCS_DIR}/.lock-scripts/README.md" << 'LOCKEOF'
+# VIBECONTROL Multi-Agentic Lock Scripts
+
+These scripts manage concurrent access to `docs/progress.md` when multiple AI agents work simultaneously.
+
+## Lock Protocol
+
+The `.progress.lock` file contains a single digit:
+- `0` = Lock is FREE (safe to acquire)
+- `1` = Lock is BUSY (another agent is working)
+
+## Usage for AI Agents
+
+### Before updating progress.md:
+
+```bash
+bash docs/.lock-scripts/acquire-lock.sh 30
+```
+
+This waits up to 30 seconds for the lock. Exit codes:
+- `0` = Lock acquired successfully, proceed with work
+- `1` = Timeout, lock still busy
+
+### After updating progress.md:
+
+```bash
+bash docs/.lock-scripts/release-lock.sh
+```
+
+Always release the lock, even if your update failed.
+
+### Checking lock status:
+
+```bash
+bash docs/.lock-scripts/check-lock.sh
+```
+
+Exit codes:
+- `0` = Lock is free
+- `1` = Lock is busy
+- `2` = Error (lock file missing or invalid)
+
+## Complete Workflow Example
+
+```bash
+# 1. Try to acquire lock
+if bash docs/.lock-scripts/acquire-lock.sh 30; then
+    # 2. Update progress.md
+    # ... your progress.md modifications ...
+
+    # 3. Always release lock
+    bash docs/.lock-scripts/release-lock.sh
+else
+    echo "Could not acquire lock, another agent is working"
+    exit 1
+fi
+```
+
+## Important Notes
+
+- **Always release the lock** after your work completes
+- Use reasonable timeouts (30-60 seconds recommended)
+- If a lock stays at `1` indefinitely, an agent crashed—manually reset to `0`
+- Lock scripts are idempotent and safe to call multiple times
+- Lock acquisition includes race condition protection
+
+## Manual Lock Reset
+
+If the lock is stuck (agent crashed without releasing):
+
+```bash
+echo "0" > docs/.progress.lock
+```
+LOCKEOF
+
+    print_success "Created lock usage documentation"
+}
+
 show_next_steps() {
     echo ""
     echo -e "${GREEN}╔══════════════════════════════════════════╗${NC}"
@@ -383,6 +590,13 @@ show_next_steps() {
     fi
     if [[ "$SETUP_TYPE" == "full" ]] || [[ "${install_proc}" =~ ^[Yy]$ ]]; then
         echo "   • docs/proc/ - Debug logs and snapshots"
+    fi
+    if [ "$MULTI_AGENTIC" = true ]; then
+        echo ""
+        echo "Multi-agentic locking:"
+        echo "   • docs/.progress.lock - Lock file (prevents race conditions)"
+        echo "   • docs/.lock-scripts/ - Helper scripts for lock management"
+        echo "   • See docs/.lock-scripts/README.md for usage"
     fi
     echo ""
     echo -e "Documentation: ${BLUE}docs/VIBECONTROL.md${NC}"
@@ -426,12 +640,20 @@ main() {
             ;;
     esac
 
+    # Ask about multi-agentic support
+    prompt_multi_agentic
+
     echo ""
     print_info "Installing VIBECONTROL (${SETUP_TYPE} setup)..."
     echo ""
 
     # Create directory structure
     create_docs_structure
+
+    # Create multi-agentic lock infrastructure if enabled
+    if [ "$MULTI_AGENTIC" = true ]; then
+        create_lock_infrastructure
+    fi
 
     # Optional updates
     echo ""

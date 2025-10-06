@@ -4,6 +4,61 @@ This file tracks all significant work completed in this project. Each entry shou
 
 ---
 
+## 2025-10-06 21:45 UTC
+
+### Implemented multi-agentic locking support for concurrent agent access
+
+**Context:** When multiple AI agents work on a VIBECONTROL-managed project concurrently, they can create race conditions when updating docs/progress.md simultaneously. User requested opt-in locking mechanism to prevent this, disabled by default to avoid complexity for single-agent use cases.
+
+**Changes:**
+- Modified install.sh:
+  - Added `MULTI_AGENTIC=false` variable (line 18)
+  - Created `prompt_multi_agentic()` function with clear user prompt explaining when to enable locking
+  - Added call to `prompt_multi_agentic()` before installation begins
+  - Created `create_lock_infrastructure()` function that generates complete locking system:
+    - Creates `.progress.lock` file initialized to `0` (FREE state)
+    - Creates `.lock-scripts/` directory with three executable bash scripts:
+      - `acquire-lock.sh` - Waits up to timeout for lock, includes race condition protection
+      - `release-lock.sh` - Sets lock to `0` (FREE)
+      - `check-lock.sh` - Reports lock status with proper exit codes
+    - Creates `.lock-scripts/README.md` with complete usage documentation for AI agents
+  - Updated `show_next_steps()` to display lock infrastructure files when enabled
+- Updated VIBECONTROL.md:
+  - Added new "Procedure 5: Multi-Agentic Coordination (Optional)" section after Procedure 4
+  - Renumbered original Procedure 5 to Procedure 6
+  - Documented lock protocol: `0` = FREE, `1` = BUSY
+  - Provided complete workflow examples with bash scripts
+  - Explained when to use locking (concurrent agents) vs. when not to (single agent, reading files)
+  - Added troubleshooting guidance for stuck locks
+
+**Outcome:**
+- Users can now enable multi-agentic support during installation
+- Lock acquisition script includes 0.1s verification sleep to handle race conditions
+- Three helper scripts provide complete lock management for AI agents
+- Comprehensive documentation in both `.lock-scripts/README.md` and VIBECONTROL.md
+- Feature is opt-in (defaults to disabled) to keep simple projects simple
+- Tested successfully:
+  - Installation without locking works as before
+  - Installation with locking creates all infrastructure files
+  - Lock file initializes to `0`
+  - `acquire-lock.sh` correctly acquires lock (sets to `1`)
+  - `release-lock.sh` correctly releases lock (sets to `0`)
+  - `check-lock.sh` reports status accurately
+
+**Issues:** None identified
+
+**Next:**
+- Monitor usage to see if timeout defaults (30s) are appropriate
+- Consider adding lock metadata (timestamp, agent ID) for debugging stuck locks
+- Evaluate whether other docs/ files besides progress.md need locking
+
+**Related:**
+- install.sh lines 18, 110-138, 384-558, 593-601 - multi-agentic implementation
+- VIBECONTROL.md lines 503-561 - Procedure 5 documentation
+- docs/.lock-scripts/README.md - agent usage guide (created by installer)
+
+---
+
 ## 2025-10-06 21:30 UTC
 
 ### Restructured VIBECONTROL.md to surface critical instructions

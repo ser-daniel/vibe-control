@@ -500,7 +500,62 @@ When you encounter errors, can't complete task, or get stuck:
 
 **Never:** Silently fail, make up solutions, or pretend problems don't exist
 
-### Procedure 5: Learning New Patterns or Making Decisions
+### Procedure 5: Multi-Agentic Coordination (Optional)
+
+If the project has multi-agentic locking enabled (indicated by presence of `docs/.progress.lock` file):
+
+**Before updating docs/progress.md:**
+
+```bash
+# 1. Acquire lock (waits up to 30 seconds)
+bash docs/.lock-scripts/acquire-lock.sh 30
+```
+
+**After updating docs/progress.md:**
+
+```bash
+# 2. Always release lock, even if update failed
+bash docs/.lock-scripts/release-lock.sh
+```
+
+**Complete workflow example:**
+
+```bash
+# Check if lock infrastructure exists
+if [ -f "docs/.progress.lock" ]; then
+  # Multi-agentic mode enabled, use locking
+  if bash docs/.lock-scripts/acquire-lock.sh 30; then
+    # Update progress.md here
+    # ... make your edits ...
+    
+    # Always release
+    bash docs/.lock-scripts/release-lock.sh
+  else
+    echo "Another agent is updating progress.md, waiting..."
+    exit 1
+  fi
+else
+  # Single-agent mode, update directly
+  # ... make your edits ...
+fi
+```
+
+**Lock states:**
+- `0` = FREE (safe to acquire)
+- `1` = BUSY (another agent working)
+
+**Important:**
+- Lock acquisition includes race condition protection
+- Always release lock after work completes
+- If lock stays at `1` indefinitely, agent crashed—manually reset: `echo "0" > docs/.progress.lock`
+- See `docs/.lock-scripts/README.md` for complete documentation
+
+**When NOT to use locking:**
+- Single agent working alone (default VIBECONTROL setup)
+- Reading files (only needed when writing to progress.md)
+- Updating other docs/ files that don't have concurrent write conflicts
+
+### Procedure 6: Learning New Patterns or Making Decisions
 
 When you discover important patterns, make architectural decisions, or learn domain knowledge:
 
