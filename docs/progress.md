@@ -4,6 +4,33 @@ This file tracks all significant work completed in this project. Each entry shou
 
 ---
 
+## 2025-10-06 22:55 UTC
+
+### Enhanced install.sh to download VIBECONTROL.md from GitHub when not present locally
+
+**Context:** User reported that when install.sh is run via piped curl in another project (without local VIBECONTROL.md), the script only showed a warning instead of fetching the protocol file. This left users with incomplete installations requiring manual download.
+
+**Changes:**
+- Modified `create_docs_structure()` function in install.sh (lines 217-247)
+- Changed VIBECONTROL.md handling from copy-only to copy-or-download pattern:
+  - First tries to copy from `${SCRIPT_DIR}/VIBECONTROL.md` (local installation)
+  - Falls back to downloading from `https://raw.githubusercontent.com/ser-daniel/vibe-control/main/VIBECONTROL.md`
+  - Supports both curl and wget with graceful fallback
+  - Provides clear user feedback at each step (downloading/success/failure)
+
+**Outcome:**
+- install.sh now fully self-contained for piped curl installation
+- Users can run `bash <(curl -sSL .../install.sh)` in any project and get complete setup
+- VIBECONTROL.md automatically downloaded to docs/ when not present locally
+- Maintains backward compatibility for local script execution
+- Clear error messages if download fails (neither curl nor wget available)
+
+**Issues:** None
+
+**Next:** Consider testing the piped installation flow in a separate test directory to verify download works correctly
+
+---
+
 ## 2025-10-06 19:48 UTC
 
 ### Fixed install.sh to support interactive input when piped from curl

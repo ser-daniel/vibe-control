@@ -215,14 +215,33 @@ EOF
         print_warning "progress.md already exists, skipping..."
     fi
 
-    # Copy VIBECONTROL.md
+    # Copy or download VIBECONTROL.md
     if [ ! -f "${DOCS_DIR}/VIBECONTROL.md" ]; then
         if [ -f "${SCRIPT_DIR}/VIBECONTROL.md" ]; then
+            # If VIBECONTROL.md exists in script directory, copy it
             cp "${SCRIPT_DIR}/VIBECONTROL.md" "${DOCS_DIR}/VIBECONTROL.md"
             print_success "Copied VIBECONTROL.md"
         else
-            print_warning "VIBECONTROL.md not found in script directory"
-            print_info "You can download it manually from the VIBECONTROL repository"
+            # Download from GitHub repository
+            print_info "Downloading VIBECONTROL.md from GitHub..."
+            if command -v curl >/dev/null 2>&1; then
+                if curl -sSL "https://raw.githubusercontent.com/ser-daniel/vibe-control/main/VIBECONTROL.md" -o "${DOCS_DIR}/VIBECONTROL.md" 2>/dev/null; then
+                    print_success "Downloaded VIBECONTROL.md"
+                else
+                    print_error "Failed to download VIBECONTROL.md"
+                    print_info "You can download it manually from https://github.com/ser-daniel/vibe-control"
+                fi
+            elif command -v wget >/dev/null 2>&1; then
+                if wget -q "https://raw.githubusercontent.com/ser-daniel/vibe-control/main/VIBECONTROL.md" -O "${DOCS_DIR}/VIBECONTROL.md" 2>/dev/null; then
+                    print_success "Downloaded VIBECONTROL.md"
+                else
+                    print_error "Failed to download VIBECONTROL.md"
+                    print_info "You can download it manually from https://github.com/ser-daniel/vibe-control"
+                fi
+            else
+                print_error "Neither curl nor wget found"
+                print_info "Please install curl or wget, or download manually from https://github.com/ser-daniel/vibe-control"
+            fi
         fi
     else
         print_warning "VIBECONTROL.md already exists, skipping..."
