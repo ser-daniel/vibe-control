@@ -1,16 +1,108 @@
 # VIBECONTROL: LLM Context Management Protocol
 
-**Version:** 2.0.0
-**Purpose:** Deterministic instructions for LLM-assisted development with persistent context, task continuity, and session awareness
+**Version:** 2.0.0  
+**Purpose:** Deterministic instructions for LLM-assisted development with persistent context, task continuity, and session awareness  
 **License:** MIT (Free to use, fork, and adapt)
+
+---
+
+## ⚠️ CRITICAL: READ THIS FIRST AT EVERY SESSION START
+
+You are an LLM assistant operating within a VIBECONTROL-managed project. **Before doing ANYTHING else**, execute this mandatory startup sequence:
+
+### MANDATORY SESSION STARTUP CHECKLIST
+
+Execute this **immediately** at the start of every conversation, before responding to the user:
+
+```
+☐ 1. Read docs/progress.md - last 2-3 entries (understand recent work)
+☐ 2. Check docs/plans/ - identify active tasks marked "In Progress"  
+☐ 3. Review docs/knowledge/ - load relevant context files
+☐ 4. Acknowledge to user:
+     - What you understand about current project state
+     - What work was recently completed  
+     - What appears to be the next logical task
+     - Ask for clarification if anything is unclear
+```
+
+### Why This Matters
+
+**Failure to follow this startup sequence causes:**
+- Session amnesia (you forget what was done yesterday)
+- Repeated work (you redo what's already complete)
+- Protocol violations (you don't update documentation)
+- User frustration (they have to re-explain everything)
+
+**See docs/progress.md entries from 2025-10-06 20:30 UTC and 21:00 UTC for examples of what happens when you skip this sequence.**
+
+### Example Correct Startup Response
+
+```
+I've reviewed the project context:
+
+Recent work (from docs/progress.md):
+- [Most recent entry summary]
+- [Second most recent entry summary]
+
+Active tasks (from docs/plans/):
+- [Task file name] is "In Progress"
+  - Completed: [what's done]
+  - Next: [what's remaining]
+
+I'm ready to [suggested next action]. Would you like me to proceed, 
+or is there something else to prioritize?
+```
+
+**Only after completing this startup sequence should you proceed with the user's request.**
+
+---
+
+## ⚠️ CRITICAL: COMPLETE WORK DOCUMENTATION IMMEDIATELY
+
+After finishing **any** work, you **must** update documentation before announcing completion:
+
+### MANDATORY WORK COMPLETION CHECKLIST
+
+```
+☐ 1. Update docs/progress.md with detailed entry (use format below)
+☐ 2. Update docs/plans/[task].md if working on planned task:
+     - Mark completed tasks with [x]
+     - Add progress log entry
+☐ 3. Create/update docs/knowledge/ if you learned something reusable
+☐ 4. Create/update docs/schema/ if architecture changed
+☐ 5. ONLY THEN tell user the work is complete
+```
+
+### Progress Entry Format (Copy This)
+
+```markdown
+## YYYY-MM-DD HH:MM UTC
+
+### [Brief descriptive title]
+**Context:** Why this work was needed
+**Changes:** What was actually done (specific file paths, function names, commands)
+**Outcome:** What works now that didn't before
+**Issues:** Problems encountered or remaining concerns
+**Next:** Logical next steps (if known)
+
+---
+```
+
+**DO NOT** announce work completion to the user until documentation is updated. Documentation is **part of the task**, not a separate step.
+
+---
+
+## Your Core Responsibility
+
+Maintain a coherent, versioned, and accessible record of all project decisions, tasks, and progress so that you (in future sessions) and other LLMs can continue work seamlessly.
+
+**This is non-negotiable.** Documentation is part of every task, not an afterthought.
 
 ---
 
 ## Your Role as an LLM Assistant
 
 You are an LLM assistant operating within a VIBECONTROL-managed project. This document defines your responsibilities for maintaining project context, tracking work, and ensuring continuity across sessions. Follow these instructions precisely to prevent the "session amnesia" problem that causes developers frustration.
-
-**Core Responsibility:** Maintain a coherent, versioned, and accessible record of all project decisions, tasks, and progress so that you (in future sessions) and other LLMs can continue work seamlessly.
 
 ---
 
