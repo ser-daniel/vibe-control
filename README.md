@@ -635,11 +635,3 @@ curl -sSL https://raw.githubusercontent.com/ser-daniel/vibe-control/main/install
 # Start building with persistent context
 "Let's implement [your feature]. Create a plan first."
 ```
-
-**Stop paying $29-100/month for what files already do.
-Stop re-explaining your project every session.
-Start building with context that persists.**
-
----
-
-*Built by developers who were tired of re-explaining their projects—and tired of paying for memory that should be free.*
